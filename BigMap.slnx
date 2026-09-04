@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BigMap.Server.Tests/BigMap.Server.Tests.csproj" />
+  <Project Path="BigMap.Server/BigMap.Server.csproj" />
+</Solution>

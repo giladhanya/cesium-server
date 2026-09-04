@@ -21,3 +21,8 @@ data/*
 *.njsproj
 #*.sln
 *.sw?
+
+# .NET build output and generated tile cache
+**/bin/
+**/obj/
+cache/
