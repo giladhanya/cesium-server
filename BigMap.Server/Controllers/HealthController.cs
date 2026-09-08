@@ -7,12 +7,10 @@ namespace BigMap.Server.Controllers;
 [ApiController]
 public sealed class HealthController : ControllerBase
 {
-    private readonly TileRendererOptions rendererOptions;
     private readonly IHttpClientFactory httpClientFactory;
 
-    public HealthController(IOptions<TileRendererOptions> rendererOptions, IHttpClientFactory httpClientFactory)
+    public HealthController(IHttpClientFactory httpClientFactory)
     {
-        this.rendererOptions = rendererOptions.Value;
         this.httpClientFactory = httpClientFactory;
     }
 

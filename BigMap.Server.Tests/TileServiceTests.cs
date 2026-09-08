@@ -1,5 +1,6 @@
 using BigMap.Server.Options;
 using BigMap.Server.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -95,7 +96,8 @@ public sealed class TileServiceTests
         public FakeRenderer() : base(
             new HttpClient(new FakeHandler()),
             Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
-            NullLogger<TileRendererClient>.Instance)
+            NullLogger<TileRendererClient>.Instance,
+            new ConfigurationBuilder().Build())
         {
         }
 
