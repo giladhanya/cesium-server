@@ -14,36 +14,66 @@ public sealed class TileCacheService
         this.logger = logger;
     }
 
-    public async Task<byte[]?> TryGetAsync(int z, int x, int y, CancellationToken cancellationToken)
+    public Task<byte[]?> TryGetPngAsync(TileLayer layer, int z, int x, int y, CancellationToken cancellationToken) =>
+        TryGetFileAsync(GetRenderedPath(layer, z, x, y, ".png"), layer.ToRouteName(), z, x, y, cancellationToken);
+
+    public Task<byte[]?> TryGetBasePngAsync(int z, int x, int y, CancellationToken cancellationToken) =>
+        TryGetFileAsync(GetBasePath(z, x, y, ".png"), "base", z, x, y, cancellationToken);
+
+    public Task<byte[]?> TryGetPbfAsync(int z, int x, int y, CancellationToken cancellationToken) =>
+        TryGetFileAsync(GetPbfPath(z, x, y), "pbf", z, x, y, cancellationToken);
+
+    private async Task<byte[]?> TryGetFileAsync(string path, string layer, int z, int x, int y, CancellationToken cancellationToken)
     {
-        var path = GetPath(z, x, y);
         if (!File.Exists(path))
         {
-            logger.LogInformation("Cache MISS: {Z}/{X}/{Y}", z, x, y);
+            logger.LogInformation("Cache MISS: {Layer}/{Z}/{X}/{Y}", layer, z, x, y);
             return null;
         }
 
-        logger.LogInformation("Cache HIT: {Z}/{X}/{Y}", z, x, y);
+        logger.LogInformation("Cache HIT: {Layer}/{Z}/{X}/{Y}", layer, z, x, y);
         return await File.ReadAllBytesAsync(path, cancellationToken);
     }
 
-    public async Task SaveAsync(int z, int x, int y, byte[] png, CancellationToken cancellationToken)
+    public Task SavePngAsync(TileLayer layer, int z, int x, int y, byte[] content, CancellationToken cancellationToken) =>
+        SaveFileAsync(GetRenderedPath(layer, z, x, y, ".png"), layer.ToRouteName(), z, x, y, content, cancellationToken);
+
+    public Task SaveBasePngAsync(int z, int x, int y, byte[] content, CancellationToken cancellationToken) =>
+        SaveFileAsync(GetBasePath(z, x, y, ".png"), "base", z, x, y, content, cancellationToken);
+
+    public Task SavePbfAsync(int z, int x, int y, byte[] content, CancellationToken cancellationToken) =>
+        SaveFileAsync(GetPbfPath(z, x, y), "pbf", z, x, y, content, cancellationToken);
+
+    private async Task SaveFileAsync(string path, string layer, int z, int x, int y, byte[] content, CancellationToken cancellationToken)
     {
-        var path = GetPath(z, x, y);
         var directory = Path.GetDirectoryName(path)!;
         var dir = Directory.CreateDirectory(directory);
-        logger.LogInformation("Saving: {Z}/{X}/{Y} to {Directory}", z, x, y, dir.FullName);
+        logger.LogInformation("Saving: {Layer}/{Z}/{X}/{Y} to {Directory}", layer, z, x, y, dir.FullName);
         var temporaryPath = path + ".tmp";
 
-        await File.WriteAllBytesAsync(temporaryPath, png, cancellationToken);
+        await File.WriteAllBytesAsync(temporaryPath, content, cancellationToken);
         File.Move(temporaryPath, path, overwrite: true);
-        logger.LogInformation("Saved: {Z}/{X}/{Y}", z, x, y);
+        logger.LogInformation("Saved: {Layer}/{Z}/{X}/{Y}", layer, z, x, y);
     }
 
-    private string GetPath(int z, int x, int y) => Path.Combine(
+    private string GetRenderedPath(TileLayer layer, int z, int x, int y, string extension) => Path.Combine(
         options.RootPath,
         options.StyleVersion,
+        layer.ToRouteName(),
         z.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        x.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        $"{y}.png");
+        $"{x.ToString(System.Globalization.CultureInfo.InvariantCulture)}_{y.ToString(System.Globalization.CultureInfo.InvariantCulture)}{extension}");
+
+    private string GetBasePath(int z, int x, int y, string extension) => Path.Combine(
+        options.RootPath,
+        options.StyleVersion,
+        "base",
+        z.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        $"{x.ToString(System.Globalization.CultureInfo.InvariantCulture)}_{y.ToString(System.Globalization.CultureInfo.InvariantCulture)}{extension}");
+
+    private string GetPbfPath(int z, int x, int y) => Path.Combine(
+        options.RootPath,
+        options.StyleVersion,
+        "pbf",
+        z.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        $"{x.ToString(System.Globalization.CultureInfo.InvariantCulture)}_{y.ToString(System.Globalization.CultureInfo.InvariantCulture)}.pbf");
 }

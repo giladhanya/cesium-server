@@ -1,4 +1,5 @@
 using BigMap.Server.Options;
+using System.IO.Compression;
 using BigMap.Server.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -8,15 +9,30 @@ namespace BigMap.Server.Tests;
 
 public sealed class TileServiceTests
 {
+    [Theory]
+    [InlineData("boundary", TileLayer.Boundary)]
+    [InlineData("WATER_NAME", TileLayer.WaterName)]
+    public void TileLayerNamesAreParsedCaseInsensitively(string value, TileLayer expected)
+    {
+        Assert.True(TileLayerExtensions.TryParse(value, out var actual));
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void UnknownTileLayerNamesAreRejected()
+    {
+        Assert.False(TileLayerExtensions.TryParse("buildingz", out _));
+    }
+
     [Fact]
     public async Task CacheHitDoesNotCallRenderer()
     {
         var root = CreateTempDirectory();
-        await File.WriteAllBytesAsync(Path.Combine(root, "bigmap-v1", "0", "0", "0.png"), Png());
+        await File.WriteAllBytesAsync(Path.Combine(root, "bigmap-v1", "base", "0", "0_0.png"), Png());
         var renderer = new FakeRenderer();
         var service = CreateService(root, renderer);
 
-        var result = await service.GetTileAsync(0, 0, 0, CancellationToken.None);
+        var result = await service.GetBaseTileAsync(0, 0, 0, CancellationToken.None);
 
         Assert.Equal(TileResultStatus.Success, result.Status);
         Assert.Equal(0, renderer.Calls);
@@ -30,12 +46,30 @@ public sealed class TileServiceTests
         var service = CreateService(root, renderer);
 
         var results = await Task.WhenAll(
-            service.GetTileAsync(1, 0, 1, CancellationToken.None),
-            service.GetTileAsync(1, 0, 1, CancellationToken.None));
+            service.GetBaseTileAsync(1, 0, 1, CancellationToken.None),
+            service.GetBaseTileAsync(1, 0, 1, CancellationToken.None));
 
         Assert.All(results, result => Assert.Equal(TileResultStatus.Success, result.Status));
         Assert.Equal(1, renderer.Calls);
-        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "1", "0", "1.png")));
+        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "base", "1", "0_1.png")));
+    }
+
+    [Fact]
+    public async Task DifferentLayersUseSeparateCacheEntries()
+    {
+        var root = CreateTempDirectory();
+        var renderer = new FakeRenderer();
+        var service = CreateService(root, renderer);
+
+        var baseResult = await service.GetBaseTileAsync(1, 0, 1, CancellationToken.None);
+        var landcoverResult = await service.GetTileAsync(TileLayer.Landcover, 1, 0, 1, CancellationToken.None);
+
+        Assert.Equal(TileResultStatus.Success, baseResult.Status);
+        Assert.Equal(TileResultStatus.Success, landcoverResult.Status);
+        Assert.Equal(1, renderer.Calls);
+        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "base", "1", "0_1.png")));
+        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "landcover", "1", "0_1.png")));
+        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "pbf", "1", "0_1.pbf")));
     }
 
     [Fact]
@@ -44,7 +78,7 @@ public sealed class TileServiceTests
         var renderer = new FakeRenderer { Status = TileRendererStatus.NotFound };
         var service = CreateService(CreateTempDirectory(), renderer);
 
-        var result = await service.GetTileAsync(0, 0, 0, CancellationToken.None);
+        var result = await service.GetBaseTileAsync(0, 0, 0, CancellationToken.None);
 
         Assert.Equal(TileResultStatus.NotFound, result.Status);
     }
@@ -55,7 +89,7 @@ public sealed class TileServiceTests
         var renderer = new FakeRenderer { Status = TileRendererStatus.Failure };
         var service = CreateService(CreateTempDirectory(), renderer);
 
-        var result = await service.GetTileAsync(0, 0, 0, CancellationToken.None);
+        var result = await service.GetBaseTileAsync(0, 0, 0, CancellationToken.None);
 
         Assert.Equal(TileResultStatus.RendererFailure, result.Status);
     }
@@ -78,6 +112,8 @@ public sealed class TileServiceTests
         return new TileService(
             cache,
             fakeRenderer,
+            new FakePbfClient(),
+            new VectorTileRenderer(),
             Microsoft.Extensions.Options.Options.Create(new TileCacheOptions { RootPath = root }),
             NullLogger<TileService>.Instance);
     }
@@ -85,7 +121,7 @@ public sealed class TileServiceTests
     private static string CreateTempDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), "bigmap-tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Path.Combine(path, "bigmap-v1", "0", "0"));
+        Directory.CreateDirectory(Path.Combine(path, "bigmap-v1", "base", "0"));
         return path;
     }
 
@@ -96,8 +132,7 @@ public sealed class TileServiceTests
         public FakeRenderer() : base(
             new HttpClient(new FakeHandler()),
             Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
-            NullLogger<TileRendererClient>.Instance,
-            new ConfigurationBuilder().Build())
+            NullLogger<TileRendererClient>.Instance)
         {
         }
 
@@ -105,7 +140,7 @@ public sealed class TileServiceTests
         public TimeSpan Delay { get; init; }
         public TileRendererStatus Status { get; init; } = TileRendererStatus.Success;
 
-        public override async Task<TileRendererResult> RenderAsync(int z, int x, int y, CancellationToken cancellationToken)
+        public override async Task<TileRendererResult> RenderBaseAsync(int z, int x, int y, CancellationToken cancellationToken)
         {
             Calls++;
             await Task.Delay(Delay, cancellationToken);
@@ -117,5 +152,28 @@ public sealed class TileServiceTests
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
             Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+    }
+
+    private sealed class FakePbfClient : TilePbfClient
+    {
+        public FakePbfClient() : base(
+            new HttpClient(new FakeHandler()),
+            Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
+            NullLogger<TilePbfClient>.Instance)
+        {
+        }
+
+        public override Task<(TileRendererStatus Status, byte[]? Pbf)> GetAsync(int z, int x, int y, CancellationToken cancellationToken) =>
+            Task.FromResult<(TileRendererStatus, byte[]?)>((TileRendererStatus.Success, EmptyPbf()));
+
+        private static byte[] EmptyPbf()
+        {
+            using var output = new MemoryStream();
+            using (var gzip = new GZipStream(output, CompressionLevel.Fastest, leaveOpen: true))
+            {
+            }
+
+            return output.ToArray();
+        }
     }
 }
