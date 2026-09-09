@@ -17,20 +17,23 @@ public class TileRendererClient
     private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
     private readonly HttpClient httpClient;
     private readonly ILogger<TileRendererClient> logger;
+    private readonly IConfiguration configuration;
 
-    public TileRendererClient(HttpClient httpClient, IOptions<TileRendererOptions> options, ILogger<TileRendererClient> logger)
+    public TileRendererClient(HttpClient httpClient, IOptions<TileRendererOptions> options, ILogger<TileRendererClient> logger, IConfiguration configuration)
     {
         this.httpClient = httpClient;
         this.httpClient.BaseAddress = new Uri(options.Value.BaseUrl.TrimEnd('/') + "/");
         this.httpClient.Timeout = TimeSpan.FromSeconds(options.Value.TimeoutSeconds);
         this.logger = logger;
+        this.configuration = configuration;
     }
 
     public virtual async Task<TileRendererResult> RenderAsync(int z, int x, int y, CancellationToken cancellationToken)
     {
         try
         {
-            using var response = await httpClient.GetAsync($"render/{z}/{x}/{y}.png", cancellationToken);
+            var path = $"{configuration["TileRenderer:PathPrefix"]}/{z}/{x}/{y}.png";
+            using var response = await httpClient.GetAsync(path, cancellationToken);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return new(TileRendererStatus.NotFound);

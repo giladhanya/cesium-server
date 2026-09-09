@@ -31,7 +31,8 @@ public sealed class TileCacheService
     {
         var path = GetPath(z, x, y);
         var directory = Path.GetDirectoryName(path)!;
-        Directory.CreateDirectory(directory);
+        var dir = Directory.CreateDirectory(directory);
+        logger.LogInformation("Saving: {Z}/{X}/{Y} to {Directory}", z, x, y, dir.FullName);
         var temporaryPath = path + ".tmp";
 
         await File.WriteAllBytesAsync(temporaryPath, png, cancellationToken);

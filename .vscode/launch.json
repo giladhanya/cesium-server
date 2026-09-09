@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug BigMap.Server",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-all",
+      "program": "${workspaceFolder}/BigMap.Server/bin/Debug/net10.0/BigMap.Server.dll",
+      "cwd": "${workspaceFolder}/BigMap.Server",
+      "args": [],
+      "console": "internalConsole",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s"
+      },
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ]
+}
