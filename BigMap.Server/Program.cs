@@ -4,18 +4,14 @@ using BigMap.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddOptions<TileCacheOptions>()
     .Bind(builder.Configuration.GetSection(TileCacheOptions.SectionName))
     .Validate(options => options.MaxZoom is >= 0 and <= 30, "MaxZoom must be between 0 and 30.")
     .ValidateOnStart();
 builder.Services.AddOptions<TileRendererOptions>()
     .Bind(builder.Configuration.GetSection(TileRendererOptions.SectionName))
-    .Validate(options => Enum.GetValues<TileLayer>().All(layer =>
-        options.Layers.ContainsKey(layer.ToRouteName())),
-        "Every TileLayer enum value must have a renderer mapping.")
-    .Validate(options => options.Layers.Keys.All(layer =>
-        TileLayerExtensions.TryParse(layer, out _)),
-        "TileRenderer:Layers contains an unknown layer.")
     .ValidateOnStart();
 builder.Services.AddSingleton<TileCacheService>();
 builder.Services.AddSingleton<TileService>();
@@ -41,6 +37,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevelopmentCesium");
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.MapControllers();

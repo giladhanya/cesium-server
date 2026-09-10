@@ -14,8 +14,8 @@ public sealed class TileCacheService
         this.logger = logger;
     }
 
-    public Task<byte[]?> TryGetPngAsync(TileLayer layer, int z, int x, int y, CancellationToken cancellationToken) =>
-        TryGetFileAsync(GetRenderedPath(layer, z, x, y, ".png"), layer.ToRouteName(), z, x, y, cancellationToken);
+    public Task<byte[]?> TryGetPngAsync(string layer, int z, int x, int y, CancellationToken cancellationToken) =>
+        TryGetFileAsync(GetRenderedPath(layer, z, x, y, ".png"), layer, z, x, y, cancellationToken);
 
     public Task<byte[]?> TryGetBasePngAsync(int z, int x, int y, CancellationToken cancellationToken) =>
         TryGetFileAsync(GetBasePath(z, x, y, ".png"), "base", z, x, y, cancellationToken);
@@ -35,8 +35,8 @@ public sealed class TileCacheService
         return await File.ReadAllBytesAsync(path, cancellationToken);
     }
 
-    public Task SavePngAsync(TileLayer layer, int z, int x, int y, byte[] content, CancellationToken cancellationToken) =>
-        SaveFileAsync(GetRenderedPath(layer, z, x, y, ".png"), layer.ToRouteName(), z, x, y, content, cancellationToken);
+    public Task SavePngAsync(string layer, int z, int x, int y, byte[] content, CancellationToken cancellationToken) =>
+        SaveFileAsync(GetRenderedPath(layer, z, x, y, ".png"), layer, z, x, y, content, cancellationToken);
 
     public Task SaveBasePngAsync(int z, int x, int y, byte[] content, CancellationToken cancellationToken) =>
         SaveFileAsync(GetBasePath(z, x, y, ".png"), "base", z, x, y, content, cancellationToken);
@@ -49,17 +49,17 @@ public sealed class TileCacheService
         var directory = Path.GetDirectoryName(path)!;
         var dir = Directory.CreateDirectory(directory);
         logger.LogInformation("Saving: {Layer}/{Z}/{X}/{Y} to {Directory}", layer, z, x, y, dir.FullName);
-        var temporaryPath = path + ".tmp";
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
 
         await File.WriteAllBytesAsync(temporaryPath, content, cancellationToken);
         File.Move(temporaryPath, path, overwrite: true);
         logger.LogInformation("Saved: {Layer}/{Z}/{X}/{Y}", layer, z, x, y);
     }
 
-    private string GetRenderedPath(TileLayer layer, int z, int x, int y, string extension) => Path.Combine(
+    private string GetRenderedPath(string layer, int z, int x, int y, string extension) => Path.Combine(
         options.RootPath,
         options.StyleVersion,
-        layer.ToRouteName(),
+        layer,
         z.ToString(System.Globalization.CultureInfo.InvariantCulture),
         $"{x.ToString(System.Globalization.CultureInfo.InvariantCulture)}_{y.ToString(System.Globalization.CultureInfo.InvariantCulture)}{extension}");
 

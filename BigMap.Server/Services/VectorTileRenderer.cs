@@ -9,12 +9,9 @@ public sealed class VectorTileRenderer
 {
     private const float TileSize = 256;
     private const float DefaultExtent = 4096;
-
-    public byte[] Render(byte[] pbf, TileLayer layer)
+    public byte[] Render(byte[] pbf, string layer)
     {
-        using var input = new MemoryStream(pbf);
-        using var gzip = new GZipStream(input, CompressionMode.Decompress);
-        var layers = VectorTileParser.Parse(gzip);
+        var layers = ParseLayers(pbf).Where(value => string.Equals(value.Name, layer, StringComparison.OrdinalIgnoreCase));
         var features = layers.SelectMany(value => value.VectorTileFeatures);
 
         using var bitmap = new SKBitmap((int)TileSize, (int)TileSize);
@@ -31,26 +28,34 @@ public sealed class VectorTileRenderer
         return data.ToArray();
     }
 
-    private static SKPaint CreatePaint(TileLayer layer) => new()
+    public IReadOnlyList<string> GetLayerNames(byte[] pbf) =>
+        ParseLayers(pbf).Select(value => value.Name).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+    private static IEnumerable<VectorTileLayer> ParseLayers(byte[] pbf)
     {
-        Style = layer is TileLayer.Landcover or TileLayer.Water
-            ? SKPaintStyle.Fill
-            : SKPaintStyle.Stroke,
-        Color = layer switch
-        {
-            TileLayer.Water => new SKColor(55, 145, 220, 210),
-            TileLayer.WaterName or TileLayer.Place => new SKColor(35, 35, 35, 220),
-            _ => new SKColor(105, 155, 85, 180)
-        },
-        StrokeWidth = layer == TileLayer.Boundary ? 2 : 1,
+        using var input = new MemoryStream(pbf);
+        using Stream vectorData = IsGzip(pbf) ? new GZipStream(input, CompressionMode.Decompress) : input;
+        return VectorTileParser.Parse(vectorData).ToArray();
+    }
+
+    private static SKPaint CreatePaint(string layer) => new()
+    {
+        Color = layer.Contains("water", StringComparison.OrdinalIgnoreCase)
+            ? new SKColor(55, 145, 220, 210)
+            : layer.Contains("name", StringComparison.OrdinalIgnoreCase) || layer.Contains("place", StringComparison.OrdinalIgnoreCase)
+                ? new SKColor(35, 35, 35, 220)
+                : new SKColor(105, 155, 85, 180),
+        StrokeWidth = layer.Equals("boundary", StringComparison.OrdinalIgnoreCase) ? 2 : 1,
         IsAntialias = true
     };
+
+    private static bool IsGzip(byte[] data) => data.Length >= 2 && data[0] == 0x1F && data[1] == 0x8B;
 
     private static void DrawFeature(SKCanvas canvas, SKPaint paint, VectorTileFeature feature)
     {
         foreach (var segment in feature.Geometry)
         {
-            using var path = CreatePath(segment, feature.Extent);
+            using var path = CreatePath(segment, feature.Extent, feature.GeometryType == Tile.GeomType.Polygon);
             if (feature.GeometryType == Tile.GeomType.Polygon)
             {
                 paint.Style = SKPaintStyle.Fill;
@@ -75,7 +80,7 @@ public sealed class VectorTileRenderer
         }
     }
 
-    private static SKPath CreatePath(IReadOnlyList<Coordinate> segment, uint extent)
+    private static SKPath CreatePath(IReadOnlyList<Coordinate> segment, uint extent, bool closePath)
     {
         using var builder = new SKPathBuilder();
         var scale = TileSize / (extent == 0 ? DefaultExtent : extent);
@@ -94,7 +99,14 @@ public sealed class VectorTileRenderer
             }
         }
 
-        return builder.Detach();
+        if (closePath && segment.Count > 0)
+        {
+            builder.Close();
+        }
+
+        var path = builder.Detach();
+        path.FillType = SKPathFillType.EvenOdd;
+        return path;
     }
 
 }

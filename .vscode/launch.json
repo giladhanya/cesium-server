@@ -8,12 +8,13 @@
       "preLaunchTask": "build-all",
       "program": "${workspaceFolder}/BigMap.Server/bin/Debug/net10.0/BigMap.Server.dll",
       "cwd": "${workspaceFolder}/BigMap.Server",
+      "launchSettingsProfile": "http",
       "args": [],
       "console": "internalConsole",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s"
+        "uriFormat": "%s/swagger"
       },
       "stopAtEntry": false,
       "env": {

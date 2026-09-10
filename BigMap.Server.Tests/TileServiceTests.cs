@@ -9,21 +9,6 @@ namespace BigMap.Server.Tests;
 
 public sealed class TileServiceTests
 {
-    [Theory]
-    [InlineData("boundary", TileLayer.Boundary)]
-    [InlineData("WATER_NAME", TileLayer.WaterName)]
-    public void TileLayerNamesAreParsedCaseInsensitively(string value, TileLayer expected)
-    {
-        Assert.True(TileLayerExtensions.TryParse(value, out var actual));
-        Assert.Equal(expected, actual);
-    }
-
-    [Fact]
-    public void UnknownTileLayerNamesAreRejected()
-    {
-        Assert.False(TileLayerExtensions.TryParse("buildingz", out _));
-    }
-
     [Fact]
     public async Task CacheHitDoesNotCallRenderer()
     {
@@ -62,13 +47,27 @@ public sealed class TileServiceTests
         var service = CreateService(root, renderer);
 
         var baseResult = await service.GetBaseTileAsync(1, 0, 1, CancellationToken.None);
-        var landcoverResult = await service.GetTileAsync(TileLayer.Landcover, 1, 0, 1, CancellationToken.None);
+        var landcoverResult = await service.GetTileAsync("landuse", 1, 0, 1, CancellationToken.None);
 
         Assert.Equal(TileResultStatus.Success, baseResult.Status);
         Assert.Equal(TileResultStatus.Success, landcoverResult.Status);
         Assert.Equal(1, renderer.Calls);
         Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "base", "1", "0_1.png")));
-        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "landcover", "1", "0_1.png")));
+        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "landuse", "1", "0_1.png")));
+        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "pbf", "1", "0_1.pbf")));
+    }
+
+    [Fact]
+    public async Task ConcurrentLayersCanSaveSharedPbf()
+    {
+        var root = CreateTempDirectory();
+        var service = CreateService(root, new FakeRenderer());
+
+        var results = await Task.WhenAll(
+            service.GetTileAsync("landuse", 1, 0, 1, CancellationToken.None),
+            service.GetTileAsync("boundary", 1, 0, 1, CancellationToken.None));
+
+        Assert.All(results, result => Assert.Equal(TileResultStatus.Success, result.Status));
         Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "pbf", "1", "0_1.pbf")));
     }
 

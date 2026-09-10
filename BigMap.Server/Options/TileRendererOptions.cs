@@ -8,5 +8,4 @@ public sealed class TileRendererOptions
     public string BasePath { get; set; } = "styles/basic-preview/256";
     public string VectorPath { get; set; } = "data/v3";
     public int TimeoutSeconds { get; set; } = 30;
-    public Dictionary<string, string> Layers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

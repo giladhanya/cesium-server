@@ -28,18 +28,11 @@ public class TileRendererClient
         this.options = options.Value;
     }
 
-    public virtual async Task<TileRendererResult> RenderAsync(TileLayer layer, int z, int x, int y, CancellationToken cancellationToken)
+    public virtual async Task<TileRendererResult> RenderAsync(string layerName, int z, int x, int y, CancellationToken cancellationToken)
     {
-        var layerName = layer.ToRouteName();
         try
         {
-            if (!options.Layers.TryGetValue(layerName, out var pathPrefix) || string.IsNullOrWhiteSpace(pathPrefix))
-            {
-                logger.LogWarning("Unknown tile layer: {Layer}", layerName);
-                return new(TileRendererStatus.NotFound);
-            }
-
-            var path = $"{pathPrefix.Trim('/')}/{z}/{x}/{y}.png";
+            var path = $"{layerName.Trim('/')}/{z}/{x}/{y}.png";
             using var response = await httpClient.GetAsync(path, cancellationToken);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {

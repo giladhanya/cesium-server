@@ -13,13 +13,11 @@ Endpoints:
 - `GET /health`
 - `GET /api/base-tiles/{z}/{x}/{y}.png`
 - `GET /api/tiles/{layer}/{z}/{x}/{y}.png`
-- `GET /api/tiles/layers`
+- `GET /api/tiles/layers/{z}/{x}/{y}`
 
-כל בקשת tile חייבת לכלול שם שכבה. רשימת השכבות הזמינות מתקבלת מ-`GET /api/tiles/layers`.
-השכבות מוגדרות תחת `TileRenderer:Layers`, כאשר הערך הוא נתיב style ב-renderer.
-בהגדרת ברירת המחדל קיימות השכבות `base`, `boundary`, `landcover`, `place`, `water` ו-`water_name`.
-שמות אלו תואמים ל־`name` של
-שכבות ה־PBF שמוחזרות מ־tileserver-gl.
+כל בקשת tile חייבת לכלול את שם שכבת ה־PBF כפי שהוא מופיע בשדה `name`.
+רשימת השכבות הזמינות עבור אריח מסוים מתקבלת מ־`GET /api/tiles/layers/{z}/{x}/{y}`.
+השרת קורא את שמות השכבות ישירות מה־PBF ואינו משתמש ברשימת `SourceLayers` בקונפיגורציה.
 קבצי ה-cache נשמרים בנפרד לפי שכבה: `cache/{StyleVersion}/{layer}/{z}/{x}_{y}.png`.
 קבצי PBF נשמרים תחת `cache/{StyleVersion}/pbf/{z}/{x}_{y}.pbf`.
 עבור שכבות שאינן `base`, השרת משתמש ב־PBF מ־`TileRenderer:VectorPath` ומייצר PNG,

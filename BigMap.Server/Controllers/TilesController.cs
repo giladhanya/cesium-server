@@ -1,7 +1,5 @@
 using BigMap.Server.Services;
 using Microsoft.AspNetCore.Mvc;
-using BigMap.Server.Options;
-using Microsoft.Extensions.Options;
 
 namespace BigMap.Server.Controllers;
 
@@ -10,29 +8,37 @@ namespace BigMap.Server.Controllers;
 public sealed class TilesController : ControllerBase
 {
     private readonly TileService tileService;
-    private readonly IConfiguration configuration;
-    private readonly TileRendererOptions rendererOptions;
+    private readonly int maxZoom;
 
     public TilesController(
         TileService tileService,
-        IConfiguration configuration,
-        IOptions<TileRendererOptions> rendererOptions)
+        IConfiguration configuration)
     {
         this.tileService = tileService;
-        this.configuration = configuration;
-        this.rendererOptions = rendererOptions.Value;
+        this.maxZoom = configuration.GetValue<int>("TileCache:MaxZoom");
     }
 
     [HttpGet("layers")]
-    public IActionResult GetLayers()
+    public Task<IActionResult> GetLayers(CancellationToken cancellationToken)
     {
-        return Ok(Enum.GetValues<TileLayer>().Select(layer => layer.ToRouteName()));
+        return GetLayers(0, 0, 0, cancellationToken);
+    }
+
+    [HttpGet("layers/{z:int}/{x:int}/{y:int}")]
+    public async Task<IActionResult> GetLayers(int z, int x, int y, CancellationToken cancellationToken)
+    {
+        if (!TileCoordinateValidator.IsValid(z, x, y, maxZoom))
+        {
+            return BadRequest("Invalid tile coordinates.");
+        }
+
+        var layers = await tileService.GetVectorLayerNamesAsync(z, x, y, cancellationToken);
+        return layers is null ? NotFound() : Ok(layers);
     }
 
     [HttpGet("/api/base-tiles/{z:int}/{x:int}/{y:int}.png")]
     public async Task<IActionResult> GetBaseTile(int z, int x, int y, CancellationToken cancellationToken)
     {
-        var maxZoom = configuration.GetValue<int>("TileCache:MaxZoom");
         if (!TileCoordinateValidator.IsValid(z, x, y, maxZoom))
         {
             return BadRequest("Invalid tile coordinates.");
@@ -53,15 +59,13 @@ public sealed class TilesController : ControllerBase
     }
 
     [HttpGet("{layer}/{z:int}/{x:int}/{y:int}.png")]
-    public async Task<IActionResult> GetTile(TileLayer layer, int z, int x, int y, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetTile(string layer, int z, int x, int y, CancellationToken cancellationToken)
     {
-        var layerName = layer.ToRouteName();
-        if (!rendererOptions.Layers.ContainsKey(layerName))
+        if (string.IsNullOrWhiteSpace(layer) || layer.Contains('/') || layer.Contains('\\'))
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, "Tile layer is not configured.");
+            return BadRequest("Invalid tile layer name.");
         }
 
-        var maxZoom = configuration.GetValue<int>("TileCache:MaxZoom");
         if (!TileCoordinateValidator.IsValid(z, x, y, maxZoom))
         {
             return BadRequest("Invalid tile coordinates.");

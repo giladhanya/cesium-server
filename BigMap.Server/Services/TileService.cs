@@ -39,7 +39,7 @@ public sealed class TileService
         this.logger = logger;
     }
 
-    public async Task<TileResult> GetTileAsync(TileLayer layer, int z, int x, int y, CancellationToken cancellationToken)
+    public async Task<TileResult> GetTileAsync(string layer, int z, int x, int y, CancellationToken cancellationToken)
     {
         var cachedPng = await cache.TryGetPngAsync(layer, z, x, y, cancellationToken);
         if (cachedPng is not null)
@@ -47,7 +47,7 @@ public sealed class TileService
             return new(TileResultStatus.Success, cachedPng);
         }
 
-        var key = $"{cacheOptions.StyleVersion}/{layer.ToRouteName()}/{z}/{x}/{y}";
+        var key = $"{cacheOptions.StyleVersion}/{layer}/{z}/{x}/{y}";
         var inFlight = inFlightTiles.GetOrAdd(
             key,
             _ => new Lazy<Task<TileResult>>(
@@ -63,7 +63,7 @@ public sealed class TileService
         }
     }
 
-    private async Task<TileResult> RenderAndCacheAsync(TileLayer layer, int z, int x, int y, CancellationToken cancellationToken)
+    private async Task<TileResult> RenderAndCacheAsync(string layer, int z, int x, int y, CancellationToken cancellationToken)
     {
         var cachedPng = await cache.TryGetPngAsync(layer, z, x, y, cancellationToken);
         if (cachedPng is not null)
@@ -101,6 +101,29 @@ public sealed class TileService
             logger.LogWarning(exception, "Invalid vector tile for {Layer}/{Z}/{X}/{Y}", layer, z, x, y);
             return new(TileResultStatus.RendererFailure);
         }
+    }
+
+    public async Task<IReadOnlyList<string>?> GetVectorLayerNamesAsync(int z, int x, int y, CancellationToken cancellationToken)
+    {
+        var pbf = await cache.TryGetPbfAsync(z, x, y, cancellationToken);
+        if (pbf is null)
+        {
+            var downloaded = await pbfClient.GetAsync(z, x, y, cancellationToken);
+            if (downloaded.Status == TileRendererStatus.NotFound)
+            {
+                return null;
+            }
+
+            if (downloaded.Status != TileRendererStatus.Success || downloaded.Pbf is null)
+            {
+                throw new InvalidDataException("Vector tile could not be downloaded.");
+            }
+
+            pbf = downloaded.Pbf;
+            await cache.SavePbfAsync(z, x, y, pbf, cancellationToken);
+        }
+
+        return vectorRenderer.GetLayerNames(pbf);
     }
 
     public async Task<TileResult> GetBaseTileAsync(int z, int x, int y, CancellationToken cancellationToken)
