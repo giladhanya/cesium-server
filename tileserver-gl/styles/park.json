@@ -1,0 +1,22 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "park-fill",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "park",
+      "paint": {
+        "fill-color": "#8fcf80",
+        "fill-opacity": 0.5,
+        "fill-outline-color": "#68a85d"
+      }
+    }
+  ]
+}

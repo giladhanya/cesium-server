@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "water-name-features",
+      "type": "circle",
+      "source": "world",
+      "source-layer": "water_name",
+      "minzoom": 5,
+      "paint": {
+        "circle-radius": 2,
+        "circle-color": "#2f7fa9",
+        "circle-opacity": 0.8
+      }
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "aeroway-runway",
+      "type": "line",
+      "source": "world",
+      "source-layer": "aeroway",
+      "filter": [
+        "==",
+        [
+          "get",
+          "class"
+        ],
+        "runway"
+      ],
+      "minzoom": 9,
+      "paint": {
+        "line-color": "#8a8a8a",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          1.2,
+          15,
+          5
+        ],
+        "line-opacity": 0.9
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "aeroway-taxiway",
+      "type": "line",
+      "source": "world",
+      "source-layer": "aeroway",
+      "filter": [
+        "!=",
+        [
+          "get",
+          "class"
+        ],
+        "runway"
+      ],
+      "minzoom": 11,
+      "paint": {
+        "line-color": "#aaaaaa",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0.7,
+          16,
+          2.5
+        ],
+        "line-opacity": 0.85
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "place-points",
+      "type": "circle",
+      "source": "world",
+      "source-layer": "place",
+      "paint": {
+        "circle-radius": [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          "country",
+          5,
+          "state",
+          4,
+          "city",
+          3.5,
+          "town",
+          3,
+          2
+        ],
+        "circle-color": "#333333",
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.2,
+        "circle-opacity": 0.9
+      }
+    }
+  ]
+}

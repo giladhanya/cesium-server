@@ -1,0 +1,39 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "transportation-name-lines",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation_name",
+      "minzoom": 8,
+      "paint": {
+        "line-color": "#555555",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          0.5,
+          16,
+          1.2
+        ],
+        "line-opacity": 0.55
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    }
+  ]
+}

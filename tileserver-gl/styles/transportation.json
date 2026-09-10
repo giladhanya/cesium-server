@@ -1,0 +1,330 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "motorway-casing",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "motorway",
+            "trunk"
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          2.2,
+          10,
+          4.5,
+          16,
+          9
+        ],
+        "line-opacity": 0.95
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "motorway",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "motorway",
+            "trunk"
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#e89259",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          1.2,
+          10,
+          3,
+          16,
+          6.5
+        ],
+        "line-opacity": 1
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "primary-secondary-casing",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "primary",
+            "secondary",
+            "tertiary"
+          ]
+        ]
+      ],
+      "minzoom": 7,
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          1.5,
+          13,
+          4.3,
+          16,
+          7
+        ],
+        "line-opacity": 0.95
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "primary-secondary",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "primary",
+            "secondary",
+            "tertiary"
+          ]
+        ]
+      ],
+      "minzoom": 7,
+      "paint": {
+        "line-color": [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          "primary",
+          "#f3c36c",
+          "secondary",
+          "#f7dc97",
+          "tertiary",
+          "#f7e9bd",
+          "#f3d79c"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0.9,
+          13,
+          2.8,
+          16,
+          5
+        ],
+        "line-opacity": 1
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "minor-roads",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "minor",
+            "service",
+            "residential",
+            "living_street"
+          ]
+        ]
+      ],
+      "minzoom": 11,
+      "paint": {
+        "line-color": "#f5f5f5",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0.6,
+          16,
+          3
+        ],
+        "line-opacity": 0.95
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "rail",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "==",
+        [
+          "get",
+          "class"
+        ],
+        "rail"
+      ],
+      "minzoom": 7,
+      "paint": {
+        "line-color": "#666666",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0.7,
+          15,
+          1.8
+        ],
+        "line-dasharray": [
+          2,
+          1.5
+        ],
+        "line-opacity": 0.9
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "paths",
+      "type": "line",
+      "source": "world",
+      "source-layer": "transportation",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "path",
+            "track"
+          ]
+        ]
+      ],
+      "minzoom": 13,
+      "paint": {
+        "line-color": "#a98a63",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.6,
+          17,
+          1.8
+        ],
+        "line-dasharray": [
+          2,
+          2
+        ],
+        "line-opacity": 0.8
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    }
+  ]
+}

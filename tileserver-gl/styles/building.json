@@ -1,0 +1,35 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "building-fill",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "building",
+      "minzoom": 13,
+      "paint": {
+        "fill-color": "#b9afa5",
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.45,
+          16,
+          0.75
+        ],
+        "fill-outline-color": "#8d837a"
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "country-boundary",
+      "type": "line",
+      "source": "world",
+      "source-layer": "boundary",
+      "filter": [
+        "<=",
+        [
+          "coalesce",
+          [
+            "get",
+            "admin_level"
+          ],
+          99
+        ],
+        2
+      ],
+      "paint": {
+        "line-color": "#c43c39",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          2,
+          1.2,
+          10,
+          2.5
+        ],
+        "line-opacity": 0.95
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    },
+    {
+      "id": "admin-boundary",
+      "type": "line",
+      "source": "world",
+      "source-layer": "boundary",
+      "filter": [
+        ">",
+        [
+          "coalesce",
+          [
+            "get",
+            "admin_level"
+          ],
+          99
+        ],
+        2
+      ],
+      "minzoom": 4,
+      "paint": {
+        "line-color": "#d87976",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          4,
+          0.7,
+          12,
+          1.6
+        ],
+        "line-dasharray": [
+          3,
+          2
+        ],
+        "line-opacity": 0.8
+      },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      }
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "landcover-wood",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "landcover",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "wood",
+            "grass",
+            "farmland",
+            "wetland"
+          ]
+        ]
+      ],
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          "wood",
+          "#7fb26d",
+          "grass",
+          "#b5d58c",
+          "farmland",
+          "#d6d29a",
+          "wetland",
+          "#9cc7af",
+          "#a9c89a"
+        ],
+        "fill-opacity": 0.55
+      }
+    },
+    {
+      "id": "landcover-other",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "landcover",
+      "filter": [
+        "!",
+        [
+          "in",
+          [
+            "get",
+            "class"
+          ],
+          [
+            "literal",
+            [
+              "wood",
+              "grass",
+              "farmland",
+              "wetland"
+            ]
+          ]
+        ]
+      ],
+      "paint": {
+        "fill-color": "#b7c8a3",
+        "fill-opacity": 0.4
+      }
+    }
+  ]
+}

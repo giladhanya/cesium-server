@@ -1,0 +1,42 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "landuse-fill",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "landuse",
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          "residential",
+          "#dedede",
+          "commercial",
+          "#ead7d7",
+          "industrial",
+          "#d9d2df",
+          "cemetery",
+          "#aac9a0",
+          "hospital",
+          "#f0d6d6",
+          "school",
+          "#e9e1bd",
+          "railway",
+          "#d4d0d0",
+          "#d8d8d8"
+        ],
+        "fill-opacity": 0.5
+      }
+    }
+  ]
+}

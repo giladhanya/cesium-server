@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "housenumber-points",
+      "type": "circle",
+      "source": "world",
+      "source-layer": "housenumber",
+      "minzoom": 16,
+      "paint": {
+        "circle-radius": 1.8,
+        "circle-color": "#444444",
+        "circle-opacity": 0.85
+      }
+    }
+  ]
+}

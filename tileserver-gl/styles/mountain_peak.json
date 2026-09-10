@@ -1,0 +1,37 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "mountain-peak",
+      "type": "circle",
+      "source": "world",
+      "source-layer": "mountain_peak",
+      "minzoom": 7,
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          2,
+          13,
+          4
+        ],
+        "circle-color": "#76523c",
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1,
+        "circle-opacity": 0.9
+      }
+    }
+  ]
+}

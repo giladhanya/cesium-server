@@ -1,0 +1,22 @@
+{
+  "version": 8,
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}"
+    }
+  },
+  "layers": [
+    {
+      "id": "water-fill",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "#6aaed6",
+        "fill-opacity": 0.72,
+        "fill-outline-color": "#4f95bf"
+      }
+    }
+  ]
+}
