@@ -16,8 +16,7 @@ builder.Services.AddOptions<TileRendererOptions>()
 builder.Services.AddSingleton<TileCacheService>();
 builder.Services.AddSingleton<TileService>();
 builder.Services.AddHttpClient<TileRendererClient>();
-builder.Services.AddHttpClient<TilePbfClient>();
-builder.Services.AddSingleton<VectorTileRenderer>();
+builder.Services.AddHttpClient<TileStyleClient>();
 builder.Services.AddHttpClient("health-renderer", (serviceProvider, client) =>
 {
     var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<TileRendererOptions>>().Value;

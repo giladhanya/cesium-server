@@ -15,13 +15,13 @@ Endpoints:
 - `GET /api/tiles/{layer}/{z}/{x}/{y}.png`
 - `GET /api/tiles/layers/{z}/{x}/{y}`
 
-כל בקשת tile חייבת לכלול את שם שכבת ה־PBF כפי שהוא מופיע בשדה `name`.
-רשימת השכבות הזמינות עבור אריח מסוים מתקבלת מ־`GET /api/tiles/layers/{z}/{x}/{y}`.
-השרת קורא את שמות השכבות ישירות מה־PBF ואינו משתמש ברשימת `SourceLayers` בקונפיגורציה.
+כל בקשת tile חייבת לכלול את שם השכבה כפי שהוא מופיע ב־`styles.json`.
+רשימת השכבות הזמינות מתקבלת מ־`GET /api/tiles/layers`.
+השרת קורא את שמות השכבות ישירות מ־`GET http://127.0.0.1:8081/styles.json`.
 קבצי ה-cache נשמרים בנפרד לפי שכבה: `cache/{StyleVersion}/{layer}/{z}/{x}_{y}.png`.
-קבצי PBF נשמרים תחת `cache/{StyleVersion}/pbf/{z}/{x}_{y}.pbf`.
-עבור שכבות שאינן `base`, השרת משתמש ב־PBF מ־`TileRenderer:VectorPath` ומייצר PNG,
-ומחזיר את ה-PNG דרך ה-API.
+עבור שכבות שאינן `base`, השרת מוריד PNG ישירות מ־
+`http://127.0.0.1:8081/styles/{layer}/256/{z}/{x}/{y}.png`
+ומחזיר אותו דרך ה־API.
 
 ## Cesium
 

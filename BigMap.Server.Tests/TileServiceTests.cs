@@ -1,9 +1,9 @@
 using BigMap.Server.Options;
-using System.IO.Compression;
 using BigMap.Server.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SkiaSharp;
 
 namespace BigMap.Server.Tests;
 
@@ -20,7 +20,7 @@ public sealed class TileServiceTests
         var result = await service.GetBaseTileAsync(0, 0, 0, CancellationToken.None);
 
         Assert.Equal(TileResultStatus.Success, result.Status);
-        Assert.Equal(0, renderer.Calls);
+        Assert.Equal(0, renderer.BaseCalls);
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public sealed class TileServiceTests
             service.GetBaseTileAsync(1, 0, 1, CancellationToken.None));
 
         Assert.All(results, result => Assert.Equal(TileResultStatus.Success, result.Status));
-        Assert.Equal(1, renderer.Calls);
+        Assert.Equal(1, renderer.BaseCalls);
         Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "base", "1", "0_1.png")));
     }
 
@@ -51,14 +51,14 @@ public sealed class TileServiceTests
 
         Assert.Equal(TileResultStatus.Success, baseResult.Status);
         Assert.Equal(TileResultStatus.Success, landcoverResult.Status);
-        Assert.Equal(1, renderer.Calls);
+        Assert.Equal(1, renderer.BaseCalls);
         Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "base", "1", "0_1.png")));
         Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "landuse", "1", "0_1.png")));
-        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "pbf", "1", "0_1.pbf")));
+        Assert.Equal(1, renderer.LayerCalls);
     }
 
     [Fact]
-    public async Task ConcurrentLayersCanSaveSharedPbf()
+    public async Task ConcurrentLayersSaveSeparatePngs()
     {
         var root = CreateTempDirectory();
         var service = CreateService(root, new FakeRenderer());
@@ -68,7 +68,8 @@ public sealed class TileServiceTests
             service.GetTileAsync("boundary", 1, 0, 1, CancellationToken.None));
 
         Assert.All(results, result => Assert.Equal(TileResultStatus.Success, result.Status));
-        Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "pbf", "1", "0_1.pbf")));
+    Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "landuse", "1", "0_1.png")));
+    Assert.True(File.Exists(Path.Combine(root, "bigmap-v1", "boundary", "1", "0_1.png")));
     }
 
     [Fact]
@@ -93,6 +94,42 @@ public sealed class TileServiceTests
         Assert.Equal(TileResultStatus.RendererFailure, result.Status);
     }
 
+    [Fact]
+    public async Task LayerNamesComeFromStylesApi()
+    {
+        var client = new TileStyleClient(
+            new HttpClient(new StylesHandler()),
+            Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
+            NullLogger<TileStyleClient>.Instance);
+
+        var names = await client.GetLayerNamesAsync(CancellationToken.None);
+
+        Assert.Equal(["roads", "building"], names);
+    }
+
+    [Fact]
+    public async Task TileBelowMinZoomReturnsTransparentPngWithoutRendering()
+    {
+        var renderer = new FakeRenderer();
+        var service = CreateService(
+            CreateTempDirectory(),
+            renderer,
+            new TileStyleClient(
+                new HttpClient(new MinZoomStylesHandler()),
+                Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
+                NullLogger<TileStyleClient>.Instance));
+
+        var result = await service.GetTileAsync("building", 5, 0, 0, CancellationToken.None);
+
+        Assert.Equal(TileResultStatus.Success, result.Status);
+        Assert.NotNull(result.Png);
+        using var bitmap = SKBitmap.Decode(result.Png);
+        Assert.Equal(256, bitmap.Width);
+        Assert.Equal(256, bitmap.Height);
+        Assert.Equal(0, bitmap.GetPixel(128, 128).Alpha);
+        Assert.Equal(0, renderer.LayerCalls);
+    }
+
     [Theory]
     [InlineData(-1, 0, 0, false)]
     [InlineData(0, 1, 0, false)]
@@ -103,7 +140,10 @@ public sealed class TileServiceTests
         Assert.Equal(expected, TileCoordinateValidator.IsValid(z, x, y, 14));
     }
 
-    private static TileService CreateService(string root, FakeRenderer fakeRenderer)
+    private static TileService CreateService(
+        string root,
+        FakeRenderer fakeRenderer,
+        TileStyleClient? styleClient = null)
     {
         var cache = new TileCacheService(
             Microsoft.Extensions.Options.Options.Create(new TileCacheOptions { RootPath = root }),
@@ -111,8 +151,10 @@ public sealed class TileServiceTests
         return new TileService(
             cache,
             fakeRenderer,
-            new FakePbfClient(),
-            new VectorTileRenderer(),
+            styleClient ?? new TileStyleClient(
+                new HttpClient(new FakeHandler()),
+                Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
+                NullLogger<TileStyleClient>.Instance),
             Microsoft.Extensions.Options.Options.Create(new TileCacheOptions { RootPath = root }),
             NullLogger<TileService>.Instance);
     }
@@ -135,13 +177,21 @@ public sealed class TileServiceTests
         {
         }
 
-        public int Calls { get; private set; }
+        public int BaseCalls { get; private set; }
+        public int LayerCalls { get; private set; }
         public TimeSpan Delay { get; init; }
         public TileRendererStatus Status { get; init; } = TileRendererStatus.Success;
 
         public override async Task<TileRendererResult> RenderBaseAsync(int z, int x, int y, CancellationToken cancellationToken)
         {
-            Calls++;
+            BaseCalls++;
+            await Task.Delay(Delay, cancellationToken);
+            return new(Status, Status == TileRendererStatus.Success ? Png() : null);
+        }
+
+        public override async Task<TileRendererResult> RenderLayerAsync(string layerName, int z, int x, int y, CancellationToken cancellationToken)
+        {
+            LayerCalls++;
             await Task.Delay(Delay, cancellationToken);
             return new(Status, Status == TileRendererStatus.Success ? Png() : null);
         }
@@ -153,26 +203,28 @@ public sealed class TileServiceTests
             Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
     }
 
-    private sealed class FakePbfClient : TilePbfClient
+    private sealed class StylesHandler : HttpMessageHandler
     {
-        public FakePbfClient() : base(
-            new HttpClient(new FakeHandler()),
-            Microsoft.Extensions.Options.Options.Create(new TileRendererOptions()),
-            NullLogger<TilePbfClient>.Instance)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-        }
-
-        public override Task<(TileRendererStatus Status, byte[]? Pbf)> GetAsync(int z, int x, int y, CancellationToken cancellationToken) =>
-            Task.FromResult<(TileRendererStatus, byte[]?)>((TileRendererStatus.Success, EmptyPbf()));
-
-        private static byte[] EmptyPbf()
-        {
-            using var output = new MemoryStream();
-            using (var gzip = new GZipStream(output, CompressionLevel.Fastest, leaveOpen: true))
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {
-            }
+                Content = new StringContent("[{\"id\":\"roads\"},{\"id\":\"building\"},{\"id\":\"roads\"}]")
+            });
+        }
+    }
 
-            return output.ToArray();
+    private sealed class MinZoomStylesHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var content = request.RequestUri?.AbsolutePath.EndsWith("/style.json", StringComparison.OrdinalIgnoreCase) == true
+                ? "{\"layers\":[{\"id\":\"building\",\"minzoom\":10}]}"
+                : "[{\"id\":\"building\",\"url\":\"style.json\"}]";
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(content)
+            });
         }
     }
 }

@@ -15,6 +15,15 @@
     "staticAttributionText": "© OpenMapTiles © OpenStreetMap contributors"
   },
   "styles": {
+    "basic-preview": {
+      "style": "basic-preview.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "baselayer",
+        "format": "png"
+      }
+    },
     "aerodrome_label": {
       "style": "aerodrome_label.json",
       "serve_rendered": true,

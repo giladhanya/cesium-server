@@ -71,6 +71,11 @@ public class TileRendererClient
         return RenderPathAsync(options.BasePath, "base", z, x, y, cancellationToken);
     }
 
+    public virtual Task<TileRendererResult> RenderLayerAsync(string layerName, int z, int x, int y, CancellationToken cancellationToken)
+    {
+        return RenderPathAsync($"styles/{layerName.Trim('/')}/256", layerName, z, x, y, cancellationToken);
+    }
+
     private async Task<TileRendererResult> RenderPathAsync(string pathPrefix, string layerName, int z, int x, int y, CancellationToken cancellationToken)
     {
         try

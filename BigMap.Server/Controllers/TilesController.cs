@@ -19,20 +19,9 @@ public sealed class TilesController : ControllerBase
     }
 
     [HttpGet("layers")]
-    public Task<IActionResult> GetLayers(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetLayers(CancellationToken cancellationToken)
     {
-        return GetLayers(0, 0, 0, cancellationToken);
-    }
-
-    [HttpGet("layers/{z:int}/{x:int}/{y:int}")]
-    public async Task<IActionResult> GetLayers(int z, int x, int y, CancellationToken cancellationToken)
-    {
-        if (!TileCoordinateValidator.IsValid(z, x, y, maxZoom))
-        {
-            return BadRequest("Invalid tile coordinates.");
-        }
-
-        var layers = await tileService.GetVectorLayerNamesAsync(z, x, y, cancellationToken);
+        var layers = await tileService.GetVectorLayerNamesAsync(cancellationToken);
         return layers is null ? NotFound() : Ok(layers);
     }
 
