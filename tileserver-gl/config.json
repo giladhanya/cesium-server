@@ -1,0 +1,168 @@
+{
+  "options": {
+    "paths": {
+      "root": "/",
+      "styles": "config/styles",
+      "mbtiles": "data",
+      "pmtiles": "data",
+      "fonts": "config/fonts",
+      "sprites": "config/sprites"
+    },
+    "serveAllStyles": false,
+    "serveAllFonts": true,
+    "serveStaticMaps": true,
+    "tileMargin": 32,
+    "staticAttributionText": "© OpenMapTiles © OpenStreetMap contributors"
+  },
+  "styles": {
+    "aerodrome_label": {
+      "style": "aerodrome_label.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "aeroway": {
+      "style": "aeroway.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "boundary": {
+      "style": "boundary.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "building": {
+      "style": "building.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "housenumber": {
+      "style": "housenumber.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "landcover": {
+      "style": "landcover.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "landuse": {
+      "style": "landuse.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "mountain_peak": {
+      "style": "mountain_peak.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "park": {
+      "style": "park.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "place": {
+      "style": "place.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "poi": {
+      "style": "poi.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "transportation": {
+      "style": "transportation.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "transportation_name": {
+      "style": "transportation_name.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "water": {
+      "style": "water.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "water_name": {
+      "style": "water_name.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    },
+    "waterway": {
+      "style": "waterway.json",
+      "serve_rendered": true,
+      "serve_data": true,
+      "tilejson": {
+        "type": "overlay",
+        "format": "png"
+      }
+    }
+  },
+  "data": {
+    "world": {
+      "mbtiles": "world.mbtiles"
+    }
+  }
+}

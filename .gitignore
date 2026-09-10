@@ -26,3 +26,6 @@ data/*
 **/bin/
 **/obj/
 cache/
+
+#Fonts
+tileserver-gl/fonts
