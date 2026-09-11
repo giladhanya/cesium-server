@@ -69,35 +69,8 @@
         "format": "png"
       }
     },
-    "landcover": {
-      "style": "landcover.json",
-      "serve_rendered": true,
-      "serve_data": true,
-      "tilejson": {
-        "type": "overlay",
-        "format": "png"
-      }
-    },
-    "landuse": {
-      "style": "landuse.json",
-      "serve_rendered": true,
-      "serve_data": true,
-      "tilejson": {
-        "type": "overlay",
-        "format": "png"
-      }
-    },
     "mountain_peak": {
       "style": "mountain_peak.json",
-      "serve_rendered": true,
-      "serve_data": true,
-      "tilejson": {
-        "type": "overlay",
-        "format": "png"
-      }
-    },
-    "park": {
-      "style": "park.json",
       "serve_rendered": true,
       "serve_data": true,
       "tilejson": {
@@ -141,26 +114,8 @@
         "format": "png"
       }
     },
-    "water": {
-      "style": "water.json",
-      "serve_rendered": true,
-      "serve_data": true,
-      "tilejson": {
-        "type": "overlay",
-        "format": "png"
-      }
-    },
     "water_name": {
       "style": "water_name.json",
-      "serve_rendered": true,
-      "serve_data": true,
-      "tilejson": {
-        "type": "overlay",
-        "format": "png"
-      }
-    },
-    "waterway": {
-      "style": "waterway.json",
       "serve_rendered": true,
       "serve_data": true,
       "tilejson": {

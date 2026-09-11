@@ -1,0 +1,14 @@
+{
+  "version": 8,
+  "name": "Background Only",
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ede9df"
+      }
+    }
+  ]
+}

@@ -1,13 +1,104 @@
 {
   "version": 8,
-  "name": "Background Only",
-  "sources": {},
+  "name": "Basic Preview",
+  "sources": {
+    "world": {
+      "type": "vector",
+      "url": "mbtiles://{world}",
+      "attribution": "© OpenMapTiles © OpenStreetMap contributors"
+    }
+  },
   "layers": [
     {
       "id": "background",
       "type": "background",
       "paint": {
         "background-color": "#ede9df"
+      }
+    },
+    {
+      "id": "landcover",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "landcover",
+      "paint": {
+        "fill-color": [
+          "match",
+          ["get", "class"],
+          "wood", "#c8d9b5",
+          "grass", "#dce5c5",
+          "farmland", "#e5e3c5",
+          "ice", "#f5f8fa",
+          "sand", "#eee2bf",
+          "wetland", "#cbded3",
+          "#e2e5d3"
+        ],
+        "fill-opacity": 0.85
+      }
+    },
+    {
+      "id": "landuse",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "landuse",
+      "minzoom": 5,
+      "paint": {
+        "fill-color": [
+          "match",
+          ["get", "class"],
+          "residential", "#e0ddd6",
+          "industrial", "#d9d5d5",
+          "commercial", "#e5dcd7",
+          "retail", "#e8ddd8",
+          "cemetery", "#d0ddc4",
+          "hospital", "#f0dfdf",
+          "school", "#ebe4d2",
+          "#e5e2d9"
+        ],
+        "fill-opacity": 0.65
+      }
+    },
+    {
+      "id": "park",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "park",
+      "minzoom": 5,
+      "paint": {
+        "fill-color": "#cce0bd",
+        "fill-opacity": 0.55
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "world",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "#a9cfe5"
+      }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "world",
+      "source-layer": "waterway",
+      "minzoom": 8,
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#a9cfe5",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8, 0.5,
+          12, 1.2,
+          16, 3,
+          20, 7
+        ]
       }
     }
   ]
